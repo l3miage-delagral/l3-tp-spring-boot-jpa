@@ -80,7 +80,7 @@ public class AuthorsController {
     @DeleteMapping("/authors")
     public void deleteAuthor(Long id) throws EntityNotFoundException {
         // unimplemented... yet!
-        Author aut = authorService.get(id);
+        // Author aut = authorService.get(id);
        
     }
 
