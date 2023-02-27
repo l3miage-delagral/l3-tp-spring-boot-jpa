@@ -8,6 +8,7 @@ import fr.uga.l3miage.library.service.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -52,33 +54,65 @@ public class AuthorsController {
 
     @GetMapping("/authors/{id}")
     public AuthorDTO author(@PathVariable("id") Long id) throws EntityNotFoundException {
-        var aut = this.authorService.get(id);
-
-        return authorMapper.entityToDTO(aut);
+        
+        try {
+            var aut = this.authorService.get(id);
+            if (!this.authorService.list().contains(aut)){
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            }
+            return authorMapper.entityToDTO(aut);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
     }
 
     @PostMapping("/authors")
     @ResponseStatus(HttpStatus.CREATED)
     public AuthorDTO newAuthor(@RequestBody AuthorDTO author) {
+
+        if(author.fullName().replaceAll("\\s", "") == ""){
+            
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
+        
         Author aut = authorMapper.dtoToEntity(author);
         Author athSaved = authorService.save(aut);
 
         return authorMapper.entityToDTO(athSaved);
     }
 
-    @PutMapping("/authors")
-    public AuthorDTO updateAuthor(AuthorDTO author, Long id) throws EntityNotFoundException {
+    @PutMapping("/authors/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public AuthorDTO updateAuthor(@RequestBody AuthorDTO author, @PathVariable("id") Long id) {
 
-        if (author.id() != id){
-            authorService.update(authorMapper.dtoToEntity(author));
-            return author;
+        if (author.id() == id){
+
+            try {
+                var auth = this.authorService.get(id);
+                auth.setFullName(author.fullName());
+                
+                return this.authorMapper.entityToDTO(auth); 
+
+            }catch (Exception e) {
+                throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+            }
+
+        }else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
         // attention AuthorDTO.id() doit être égale à id, sinon la requête utilisateur est mauvaise
-        return null;
     }
 
-    @DeleteMapping("/authors")
+    @DeleteMapping("/authors/{id}")
+    @ResponseStatus(HttpStatus.OK)
     public void deleteAuthor(Long id) throws EntityNotFoundException {
+
+        try {
+            Author aut = this.authorService.get(id);
+            
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+        }
         // unimplemented... yet!
         // Author aut = authorService.get(id);
        

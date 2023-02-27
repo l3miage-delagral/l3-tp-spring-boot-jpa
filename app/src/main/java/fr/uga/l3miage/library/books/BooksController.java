@@ -3,10 +3,14 @@ package fr.uga.l3miage.library.books;
 import fr.uga.l3miage.library.authors.AuthorDTO;
 import fr.uga.l3miage.library.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collection;
 
@@ -28,8 +32,18 @@ public class BooksController {
         return null;
     }
 
-    public BookDTO book(Long id) {
-        return null;
+    @GetMapping("/books/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public BookDTO book(@PathVariable("id") Long id) {
+        
+        try {
+            var book = this.bookService.get(id);
+            return this.booksMapper.entityToDTO(book);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+        }
+        
+        
     }
 
     public BookDTO newBook(Long authorId, BookDTO book) {
