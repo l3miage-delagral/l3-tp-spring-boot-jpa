@@ -17,7 +17,7 @@ info:
 servers:
   - url: "http://localhost:8080"
 paths:
-  /api/authors:
+  /api/v1/authors:
     get:
       summary: Find all authors, possibly filtered
       operationId: find-authors
@@ -52,7 +52,7 @@ paths:
                 $ref: "#/components/schemas/Author"
         400:
           description: In case the author could not be validated
-  /api/authors/{id}:
+  /api/v1/authors/{id}:
     parameters:
       - name: id
         description: Author's id
@@ -105,7 +105,7 @@ paths:
           description: If this author share authority on a book, then book should be removed first
         404:
           description: The author was not found
-  /api/authors/{id}/books:
+  /api/v1/authors/{id}/books:
     parameters:
       - name: id
         description: Author's id
@@ -150,7 +150,7 @@ paths:
                 $ref: "#/components/schemas/Book"
         404:
           description: The author was not found
-  /api/books:
+  /api/v1/books:
     get:
       summary: Find all books, possibly filtered by name
       operationId: get-books
@@ -161,7 +161,7 @@ paths:
             'application/json':
               schema:
                 $ref: "#/components/schemas/Book"
-  /api/books/{id}:
+  /api/v1/books/{id}:
     parameters:
       - name: id
         description: Book's id
@@ -295,4 +295,3 @@ components:
         authors:
           - id: 1
             name: Victor Hugo
-
