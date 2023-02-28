@@ -1,7 +1,10 @@
 package fr.uga.l3miage.library.books;
 
+import fr.uga.l3miage.data.domain.Book;
 import fr.uga.l3miage.library.authors.AuthorDTO;
 import fr.uga.l3miage.library.service.BookService;
+import fr.uga.l3miage.library.service.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,7 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Collection;
 
 @RestController
-@RequestMapping(value = "/api", produces = "application/json")
+@RequestMapping(value = "/api/v1", produces = "application/json")
 public class BooksController {
 
     private final BookService bookService;
@@ -31,12 +34,20 @@ public class BooksController {
 
     @GetMapping("/books/v1")
     public Collection<BookDTO> books(@RequestParam("q") String query) {
+        // Collection<Book> books;
+        // if (query == null) {
+        //     books = this.bookService.list()
+        // } else {
+        //     books = this.bookService.findByTitle(query);
+        // }
+        // return (Collection<BookDTO>) books.stream()
+        // .map(booksMapper::entityToDTO)
         return null;
     }
 
-    @GetMapping("/books/{id}")
+    @GetMapping("/books/{bookId}")
     @ResponseStatus(HttpStatus.OK)
-    public BookDTO book(@PathVariable("id") Long id) {
+    public BookDTO book(@PathVariable("bookId") Long id) {
         
         try {
             var book = this.bookService.get(id);
@@ -48,17 +59,20 @@ public class BooksController {
         
     }
 
-    @PostMapping("/{authorId}/books")
+    @PostMapping("/authors/{authorId}/books")
     @ResponseStatus(HttpStatus.CREATED)
-    public BookDTO newBook(@RequestBody @PathVariable Long authorId, BookDTO book) {
+    public BookDTO newBook(@PathVariable("authorId") Long authorId, @RequestBody BookDTO book) {
         try {
+            if(book.title().replaceAll("\\s", "").equals("")){
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            }
+
             var bo = this.booksMapper.dtoToEntity(book);
-            
             this.bookService.save(authorId, bo);
-        }catch (Exception e) {
+            return this.booksMapper.entityToDTO(bo);
+        } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
-        return null;
     }
 
     public BookDTO updateBook(Long authorId, BookDTO book) {
