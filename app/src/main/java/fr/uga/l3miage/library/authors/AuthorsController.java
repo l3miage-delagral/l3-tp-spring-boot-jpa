@@ -77,10 +77,10 @@ public class AuthorsController {
         
         Author aut = authorMapper.dtoToEntity(author);
         Author athSaved = authorService.save(aut);
-
+        
         return authorMapper.entityToDTO(athSaved);
     }
-
+    
     @PutMapping("/authors/{id}")
     @ResponseStatus(HttpStatus.OK)
     public AuthorDTO updateAuthor(@RequestBody AuthorDTO author, @PathVariable("id") Long id) {
@@ -108,8 +108,7 @@ public class AuthorsController {
     public void deleteAuthor(Long id) throws EntityNotFoundException {
 
         try {
-            Author aut = this.authorService.get(id);
-            
+            this.authorService.delete(id);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.NO_CONTENT);
         }
