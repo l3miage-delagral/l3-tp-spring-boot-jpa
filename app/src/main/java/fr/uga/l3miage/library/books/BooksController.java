@@ -11,6 +11,8 @@ import fr.uga.l3miage.library.service.AuthorService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +34,8 @@ public class BooksController {
 
     private final BookService bookService;
     private final BooksMapper booksMapper;
+    @Autowired
+    private AuthorService authorService;
 
     @Autowired
     public BooksController(BookService bookService, BooksMapper booksMapper) {
@@ -39,17 +43,18 @@ public class BooksController {
         this.booksMapper = booksMapper;
     }
 
-    @GetMapping("/books/v1")
+    @GetMapping("/books")
+    @ResponseStatus(HttpStatus.OK)
     public Collection<BookDTO> books(@RequestParam("q") String query) {
-        // Collection<Book> books;
-        // if (query == null) {
-        //     books = this.bookService.list()
-        // } else {
-        //     books = this.bookService.findByTitle(query);
-        // }
-        // return (Collection<BookDTO>) books.stream()
-        // .map(booksMapper::entityToDTO)
-        return null;
+        Collection<Book> books;
+        if (query == null) {
+            books = this.bookService.list();
+        } else {
+            books = this.bookService.findByTitle(query);
+        }
+        return books.stream()
+                .map(booksMapper::entityToDTO)
+                .toList();
     }
 
     @GetMapping("/books/{bookId}")
@@ -70,56 +75,66 @@ public class BooksController {
     @ResponseStatus(HttpStatus.CREATED)
     public BookDTO newBook(@PathVariable("authorId") Long authorId, @RequestBody BookDTO book) {
         try {
+            // Vérifier que l'id de l'auteur est valide
+            if (authorId <= 0) {
+                throw new IllegalArgumentException("L'ID de l'auteur est invalide : " + authorId);
+            }
+        
             // controle du titre et du isbn
             if(book.title().replaceAll("\\s", "").equals("") || Long.toString(book.isbn()).length() != 13){
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
             }
-            // cas de l'erreur not found (si l'auteur n'existe pas)
-            
-            // try {
-            //     // Vérifier que l'auteur existe avant de créer le livre
-            //     Author author = AuthorService.get(authorId);
-            // } catch (EntityNotFoundException e) {
-            //     // L'auteur n'existe pas, retourner une erreur 404
-            //     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Auteur non trouvé");
 
+            // Vérifier que l'auteur existe avant de créer le livre
+            Author author = authorService.get(authorId);
+            
             // on créer un nouveau book et on le retourne
             var bo = this.booksMapper.dtoToEntity(book);
             this.bookService.save(authorId, bo);
             return this.booksMapper.entityToDTO(bo);
 
+        } catch (EntityNotFoundException e) {
+            // L'auteur n'existe pas, retourner une erreur 404
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Auteur non trouvé", e);
         } catch (Exception e) {
             // réponse en cas d'échec de création du new book
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Erreur lors de la création du livre", e);
         }
     }
 
-    @PutMapping("/books/{authorId}")
+
+
+    @PutMapping("/books/{bookId}")
     @ResponseStatus(HttpStatus.OK)
-    public BookDTO updateBook(@PathVariable("authorId") Long authorId, BookDTO book) {
-        if (book.id() == authorId){
-
-            try {
-                var bo = this.bookService.get(authorId);
-                bo.setTitle(book.title());
-                bo.setIsbn(book.isbn());
-                bo.setYear(book.year());
-                bo.setPublisher(book.publisher());
-
-                
-                return this.booksMapper.entityToDTO(bo); 
-
-            }catch (Exception e) {
-                throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+    public BookDTO updateBook(@PathVariable("bookId") Long bookId, @RequestBody BookDTO book) {
+        try {
+            // Vérifier que le livre existe
+            Book existingBook = bookService.get(bookId);
+    
+            if (book.id() != bookId){
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
             }
-
-        }else {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            
+            // Mettre à jour le livre avec les nouvelles informations
+            existingBook.setTitle(book.title());
+            existingBook.setIsbn(book.isbn());
+            existingBook.setYear(book.year());
+            existingBook.setPublisher(book.publisher());
+            
+            // Sauvegarder le livre mis à jour et le renvoyer en tant que DTO
+            Book savedBook = bookService.save(bookId, existingBook);
+            return booksMapper.entityToDTO(savedBook);
+        } catch (EntityNotFoundException e) {
+            // Si le livre ou l'auteur n'existe pas, renvoyer une erreur 404
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
-        // attention BookDTO.id() doit être égale à id, sinon la requête utilisateur est mauvaise
     }
-
-    public void deleteBook(Long id) {
+    
+        // attention BookDTO.id() doit être égale à id, sinon la requête utilisateur est mauvaise
+    
+    @DeleteMapping("/books/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteBook(@PathVariable("id") Long id) {
         try {
             this.bookService.delete(id);
         } catch (Exception e) {
@@ -128,6 +143,10 @@ public class BooksController {
     }
 
     public void addAuthor(Long authorId, AuthorDTO author) {
-        
+        try {
+            this.bookService.addAuthor(authorId, author.id());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+        }
     }
 }
