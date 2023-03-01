@@ -70,7 +70,7 @@ public class AuthorsController {
     @ResponseStatus(HttpStatus.CREATED)
     public AuthorDTO newAuthor(@RequestBody AuthorDTO author) {
 
-        if(author.fullName().replaceAll("\\s", "") == ""){
+        if(author.fullName().replaceAll("\\s", "").equals("")){
             
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
@@ -104,13 +104,19 @@ public class AuthorsController {
     }
 
     @DeleteMapping("/authors/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public void deleteAuthor(Long id) throws EntityNotFoundException {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteAuthor(@PathVariable("id") Long id) {
+
+        try {
+            Author aut = authorService.get(id);
+        }catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
 
         try {
             this.authorService.delete(id);
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
         // unimplemented... yet!
         // Author aut = authorService.get(id);
@@ -120,5 +126,4 @@ public class AuthorsController {
     public Collection<BookDTO> books(Long authorId) {
         return Collections.emptyList();
     }
-
 }

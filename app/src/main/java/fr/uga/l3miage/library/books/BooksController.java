@@ -45,7 +45,7 @@ public class BooksController {
 
     @GetMapping("/books")
     @ResponseStatus(HttpStatus.OK)
-    public Collection<BookDTO> books(@RequestParam("q") String query) {
+    public Collection<BookDTO> books(@RequestParam(value = "q", required = false) String query) {
         Collection<Book> books;
         if (query == null) {
             books = this.bookService.list();
@@ -56,6 +56,7 @@ public class BooksController {
                 .map(booksMapper::entityToDTO)
                 .toList();
     }
+
 
     @GetMapping("/books/{bookId}")
     @ResponseStatus(HttpStatus.OK)
@@ -74,28 +75,29 @@ public class BooksController {
     @PostMapping("/authors/{authorId}/books")
     @ResponseStatus(HttpStatus.CREATED)
     public BookDTO newBook(@PathVariable("authorId") Long authorId, @RequestBody BookDTO book) {
+                   
+            
+        // Vérifier que l'auteur existe avant de créer le livre
         try {
-            // Vérifier que l'id de l'auteur est valide
-            if (authorId <= 0) {
-                throw new IllegalArgumentException("L'ID de l'auteur est invalide : " + authorId);
-            }
+            authorService.get(authorId);
+        } catch (EntityNotFoundException e) {
+            // L'auteur n'existe pas, retourner une erreur 404
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Auteur non trouvé", e);
+        }
         
+        try { 
+
             // controle du titre et du isbn
             if(book.title().replaceAll("\\s", "").equals("") || Long.toString(book.isbn()).length() != 13){
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
             }
-
-            // Vérifier que l'auteur existe avant de créer le livre
-            Author author = authorService.get(authorId);
-            
+        
+        
             // on créer un nouveau book et on le retourne
             var bo = this.booksMapper.dtoToEntity(book);
             this.bookService.save(authorId, bo);
             return this.booksMapper.entityToDTO(bo);
 
-        } catch (EntityNotFoundException e) {
-            // L'auteur n'existe pas, retourner une erreur 404
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Auteur non trouvé", e);
         } catch (Exception e) {
             // réponse en cas d'échec de création du new book
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Erreur lors de la création du livre", e);
