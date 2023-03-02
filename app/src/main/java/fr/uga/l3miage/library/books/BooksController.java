@@ -157,7 +157,17 @@ public class BooksController {
         }
     }
 
-    public void addAuthor(Long authorId, AuthorDTO author) {
+    @PutMapping("/books/{authorId}/auhtors")
+    @ResponseStatus(HttpStatus.OK)
+    public void addAuthor(@PathVariable("authorId") Long authorId,@RequestBody AuthorDTO author) {
+        
+        // try {
+        //     this.authorService.get(authorId);
+        // }catch (Exception e) {
+        //     throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        // }
+
+
         try {
             this.bookService.addAuthor(authorId, author.id());
         } catch (Exception e) {

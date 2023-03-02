@@ -1,9 +1,11 @@
 package fr.uga.l3miage.library.authors;
 
 import fr.uga.l3miage.data.domain.Author;
+import fr.uga.l3miage.data.domain.Book;
 import fr.uga.l3miage.library.books.BookDTO;
 import fr.uga.l3miage.library.books.BooksMapper;
 import fr.uga.l3miage.library.service.AuthorService;
+import fr.uga.l3miage.library.service.BookService;
 import fr.uga.l3miage.library.service.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 
 @RestController
 @RequestMapping(value = "/api/v1", produces = "application/json")
@@ -31,6 +34,8 @@ public class AuthorsController {
     private final AuthorService authorService;
     private final AuthorMapper authorMapper;
     private final BooksMapper booksMapper;
+    @Autowired
+    private BookService bookService;
 
     @Autowired
     public AuthorsController(AuthorService authorService, AuthorMapper authorMapper, BooksMapper booksMapper) {
@@ -108,7 +113,7 @@ public class AuthorsController {
     public void deleteAuthor(@PathVariable("id") Long id) {
 
         try {
-            Author aut = authorService.get(id);
+            this.authorService.get(id);
         }catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
@@ -123,7 +128,21 @@ public class AuthorsController {
        
     }
 
+    @GetMapping("/authors/{id}/books")
     public Collection<BookDTO> books(@PathVariable("id") Long authorId) {
-        return Collections.emptyList();
+        try {
+            this.authorService.get(authorId);
+            var collectLivre = bookService.getByAuthor(authorId);
+            final Collection<BookDTO> collectLivreDTO = new HashSet<>();
+
+            for (Book b : collectLivre) {
+                collectLivreDTO.add(this.booksMapper.entityToDTO(b));
+            }
+            return collectLivreDTO;
+
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+
     }
 }
