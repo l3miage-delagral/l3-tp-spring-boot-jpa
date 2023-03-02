@@ -123,7 +123,7 @@ public class AuthorsController {
        
     }
 
-    public Collection<BookDTO> books(Long authorId) {
+    public Collection<BookDTO> books(@PathVariable("id") Long authorId) {
         return Collections.emptyList();
     }
 }

@@ -7,7 +7,6 @@ import fr.uga.l3miage.library.authors.AuthorMapper;
 import fr.uga.l3miage.library.service.AuthorService;
 import fr.uga.l3miage.library.service.BookService;
 import fr.uga.l3miage.library.service.EntityNotFoundException;
-import fr.uga.l3miage.library.service.AuthorService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,6 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
 import ch.qos.logback.classic.spi.ThrowableProxy;
 
 import java.util.Collection;
+import java.util.Set;
 
 @RestController
 @RequestMapping(value = "/api/v1", produces = "application/json")
@@ -52,6 +52,7 @@ public class BooksController {
         } else {
             books = this.bookService.findByTitle(query);
         }
+
         return books.stream()
                 .map(booksMapper::entityToDTO)
                 .toList();
@@ -88,15 +89,17 @@ public class BooksController {
         try { 
 
             // controle du titre et du isbn
-            if(book.title().replaceAll("\\s", "").equals("") || Long.toString(book.isbn()).length() != 13){
+            if(book.title().replaceAll("\\s", "").equals("") || Long.toString(book.isbn()).length() < 10 || Long.toString(book.year()).length() > 4){
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-            }
-        
-        
+            }            
+            
             // on créer un nouveau book et on le retourne
+            
+            
             var bo = this.booksMapper.dtoToEntity(book);
             this.bookService.save(authorId, bo);
             return this.booksMapper.entityToDTO(bo);
+            
 
         } catch (Exception e) {
             // réponse en cas d'échec de création du new book
@@ -122,6 +125,9 @@ public class BooksController {
             existingBook.setIsbn(book.isbn());
             existingBook.setYear(book.year());
             existingBook.setPublisher(book.publisher());
+            existingBook.setLanguage(this.booksMapper.dtoToEntity(book).getLanguage());
+            existingBook.setAuthors(this.booksMapper.dtoToEntity(book).getAuthors());
+
             
             // Sauvegarder le livre mis à jour et le renvoyer en tant que DTO
             Book savedBook = bookService.save(bookId, existingBook);
@@ -135,12 +141,19 @@ public class BooksController {
         // attention BookDTO.id() doit être égale à id, sinon la requête utilisateur est mauvaise
     
     @DeleteMapping("/books/{id}")
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteBook(@PathVariable("id") Long id) {
+
+        try{
+            this.bookService.get(id);
+        }catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+
         try {
             this.bookService.delete(id);
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
     }
 
