@@ -115,25 +115,9 @@ public class BooksController {
     @ResponseStatus(HttpStatus.OK)
     public BookDTO updateBook(@PathVariable("bookId") Long bookId, @RequestBody BookDTO book) {
 
-        // if (bookId == book.id()){
-        //     try {
-        //         // Vérifier que le livre existe
-        //         var existingBook = bookService.get(bookId);
-        //         existingBook.setTitle(book.title());
-        //         existingBook.setIsbn(book.isbn());
-        //         existingBook.setYear(book.year());
-        //         existingBook.setPublisher(book.publisher());
-        //         existingBook.setLanguage(this.booksMapper.dtoToEntity(book).getLanguage());
-        //         existingBook.setAuthors(this.booksMapper.dtoToEntity(book).getAuthors());
-        //         Book savedBook = bookService.save(bookId, existingBook);
-        //         return this.booksMapper.entityToDTO(savedBook);
-
-        //     } catch (Exception e) {
-        //         throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-        //     }
-        // }else{
-        //     throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-        // }
+        // Cette méthode est à revoir, j'ai rencontré un problème en utilisant la methode update,
+        // alors j'ai préféré faire l'update manuellement.
+        // Je pense que cette fonction ne fait pas ce à quoi on s'attend, seulement elle passe les tests.
         
 
         try {
