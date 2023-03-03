@@ -112,6 +112,9 @@ public class BooksController {
     @PutMapping("/books/{bookId}")
     @ResponseStatus(HttpStatus.OK)
     public BookDTO updateBook(@PathVariable("bookId") Long bookId, @RequestBody BookDTO book) {
+
+        
+
         try {
             // Vérifier que le livre existe
             Book existingBook = bookService.get(bookId);
@@ -152,8 +155,8 @@ public class BooksController {
     }
 
     @PutMapping("/books/{authorId}/authors")
-    @ResponseStatus(HttpStatus.CREATED)
-    public void addAuthor(@PathVariable("authorId") Long authorId,@RequestBody AuthorDTO author) {
+    @ResponseStatus(HttpStatus.OK)
+    public BookDTO addAuthor(@PathVariable("authorId") Long authorId,@RequestBody AuthorDTO author) {
 
         try {
             if (this.bookService.get(authorId).getAuthors().size() > 2){
@@ -161,9 +164,9 @@ public class BooksController {
             }
 
             var ath = this.authorService.get(author.id());
-            this.bookService.addAuthor(authorId, ath.getId());
+            var bo = this.bookService.addAuthor(authorId, ath.getId());
 
-            
+            return this.booksMapper.entityToDTO(bo);
 
         } catch (EntityNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
