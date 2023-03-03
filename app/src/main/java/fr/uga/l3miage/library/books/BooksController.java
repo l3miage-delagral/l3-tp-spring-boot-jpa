@@ -28,6 +28,8 @@ import ch.qos.logback.classic.spi.ThrowableProxy;
 import java.util.Collection;
 import java.util.Set;
 
+import javax.imageio.plugins.tiff.ExifGPSTagSet;
+
 @RestController
 @RequestMapping(value = "/api/v1", produces = "application/json")
 public class BooksController {
@@ -113,10 +115,29 @@ public class BooksController {
     @ResponseStatus(HttpStatus.OK)
     public BookDTO updateBook(@PathVariable("bookId") Long bookId, @RequestBody BookDTO book) {
 
+        // if (bookId == book.id()){
+        //     try {
+        //         // Vérifier que le livre existe
+        //         var existingBook = bookService.get(bookId);
+        //         existingBook.setTitle(book.title());
+        //         existingBook.setIsbn(book.isbn());
+        //         existingBook.setYear(book.year());
+        //         existingBook.setPublisher(book.publisher());
+        //         existingBook.setLanguage(this.booksMapper.dtoToEntity(book).getLanguage());
+        //         existingBook.setAuthors(this.booksMapper.dtoToEntity(book).getAuthors());
+        //         Book savedBook = bookService.save(bookId, existingBook);
+        //         return this.booksMapper.entityToDTO(savedBook);
+
+        //     } catch (Exception e) {
+        //         throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        //     }
+        // }else{
+        //     throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        // }
         
 
         try {
-            // Vérifier que le livre existe
+        // Vérifier que le livre existe
             Book existingBook = bookService.get(bookId);
     
             if (book.id() != bookId){
