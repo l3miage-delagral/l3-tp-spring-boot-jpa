@@ -144,34 +144,29 @@ public class BooksController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteBook(@PathVariable("id") Long id) {
 
-        try{
-            this.bookService.get(id);
-        }catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        }
-
         try {
             this.bookService.delete(id);
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
         }
     }
 
-    @PutMapping("/books/{authorId}/auhtors")
-    @ResponseStatus(HttpStatus.OK)
+    @PutMapping("/books/{authorId}/authors")
+    @ResponseStatus(HttpStatus.CREATED)
     public void addAuthor(@PathVariable("authorId") Long authorId,@RequestBody AuthorDTO author) {
-        
-        // try {
-        //     this.authorService.get(authorId);
-        // }catch (Exception e) {
-        //     throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        // }
-
 
         try {
-            this.bookService.addAuthor(authorId, author.id());
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+            if (this.bookService.get(authorId).getAuthors().size() > 2){
+                throw new ResponseStatusException(HttpStatus.OK);
+            }
+
+            var ath = this.authorService.get(author.id());
+            this.bookService.addAuthor(authorId, ath.getId());
+
+            
+
+        } catch (EntityNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
     }
 }

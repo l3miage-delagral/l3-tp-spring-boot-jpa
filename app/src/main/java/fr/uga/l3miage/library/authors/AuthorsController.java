@@ -6,6 +6,7 @@ import fr.uga.l3miage.library.books.BookDTO;
 import fr.uga.l3miage.library.books.BooksMapper;
 import fr.uga.l3miage.library.service.AuthorService;
 import fr.uga.l3miage.library.service.BookService;
+import fr.uga.l3miage.library.service.DeleteAuthorException;
 import fr.uga.l3miage.library.service.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -111,25 +112,27 @@ public class AuthorsController {
     @DeleteMapping("/authors/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAuthor(@PathVariable("id") Long id) {
-
         try {
-            this.authorService.get(id);
+            Author aut = authorService.get(id);
         }catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
 
         try {
+            for(Book bo : authorService.get(id).getBooks()){
+                if(bo.getAuthors().size() > 1){
+                    bookService.delete(bo.getId());
+                }
+            }
             this.authorService.delete(id);
+
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
-        // unimplemented... yet!
-        // Author aut = authorService.get(id);
-       
     }
 
-    @GetMapping("/authors/{id}/books")
-    public Collection<BookDTO> books(@PathVariable("id") Long authorId) {
+    @GetMapping("/authors/{authorId}/books")
+    public Collection<BookDTO> books(@PathVariable("authorId") Long authorId) {
         try {
             this.authorService.get(authorId);
             var collectLivre = bookService.getByAuthor(authorId);
@@ -143,6 +146,6 @@ public class AuthorsController {
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
-
+        
     }
 }
